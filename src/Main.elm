@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Html exposing (..)
 import Html.Events exposing (onInput, onSubmit)
-import Html.Attributes exposing (type_, class, src, style)
+import Html.Attributes exposing (type_, class, src, style, value)
 import Http
 import Browser
 import Image exposing (..)
@@ -12,16 +12,18 @@ type alias Model =
     { searchTerms : String
     , images: List Image
     , message: String
+    , format: Format
     }
 
 type Msg =
     InputChanged String
     | FormSubmitted
     | ResponseReceived (Result Http.Error (List Image))
+    | FormatChanged String
 
 init : () -> (Model, Cmd Msg)
 init _ =
-    ({ searchTerms = "", images = [], message = "" }, Cmd.none)
+    ({ searchTerms = "", images = [], message = "", format = Any }, Cmd.none)
 
 main: Program () Model Msg
 main =
@@ -50,6 +52,14 @@ viewForm =
             , onInput InputChanged
             ]
         []
+        , div [class "select"]
+            [select
+                [ onInput FormatChanged ]
+                [ option [value "any"] [ text "Tous" ]
+                , option [value "landscape"] [ text "Paysage" ]
+                , option [value "portrait"] [ text "Portrait" ]
+                ]
+            ]
     ]
 
 viewError : Model -> Html Msg
@@ -90,6 +100,13 @@ update msg model =
         ResponseReceived (Ok imageList) -> ( { model | images = imageList }, Cmd.none )
 
         ResponseReceived (Err error) ->( { model | message = (errorToString error)}, Cmd.none )
+
+        FormatChanged format ->
+            case format of
+            "any" -> ({ model | format = Any}, Cmd.none)
+            "landscape" -> ({ model | format = Landscape}, Cmd.none)
+            "portait" -> ({ model | format = Portait}, Cmd.none)
+            _ -> ( model, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
